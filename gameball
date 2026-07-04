@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Capture as Bolinhas</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    overflow:hidden;
+    background:#bfe8ff;
+    font-family:Arial,Helvetica,sans-serif;
+    user-select:none;
+}
+
+#hud{
+    position:fixed;
+    top:15px;
+    left:15px;
+    color:#111;
+    font-size:24px;
+    font-weight:bold;
+    z-index:9999;
+}
+
+#msg{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:50px;
+    background:#000a;
+    color:#fff;
+    transition:.5s;
+    z-index:9998;
+}
+
+.hide{
+    display:none!important;
+}
+
+.ball{
+    position:absolute;
+    border-radius:50%;
+    background:#fff;
+    border:2px solid #000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    font-size:30px;
+}
+
+.shake{
+    animation:shake .05s infinite;
+}
+
+@keyframes shake{
+    0%{transform:translate(2px,0);}
+    25%{transform:translate(-2px,2px);}
+    50%{transform:translate(2px,-2px);}
+    75%{transform:translate(-2px,-1px);}
+    100%{transform:translate(2px,1px);}
+}
+
+.glitch{
+    animation:bg 3s infinite;
+}
+
+@keyframes bg{
+    0%{filter:none;}
+    20%{filter:contrast(120%);}
+    21%{filter:invert(5%);}
+    22%{filter:none;}
+    60%{filter:brightness(.9);}
+}
+</style>
+</head>
+
+<body>
+
+<div id="hud">
+Fase <span id="fase">1</span><br>
+Pontos <span id="pts">0</span>/<span id="goal">10</span>
+</div>
+
+<div id="msg">Clique para começar</div>
+
+<audio id="buzz">
+<source src="">
+</audio>
+
+<script>
+
+const fases=[
+{
+meta:10,
+emoji:"😊",
+spawn:700,
+vida:1500
+},
+{
+meta:15,
+emoji:"😐",
+spawn:450,
+vida:1100
+},
+{
+meta:666,
+emoji:"🧑",
+spawn:120,
+vida:700
+}
+];
+
+let fase=0;
+let pontos=0;
+let loop;
+let iniciado=false;
+
+const hudPts=document.getElementById("pts");
+const hudGoal=document.getElementById("goal");
+const hudFase=document.getElementById("fase");
+
+function iniciar(){
+
+document.getElementById("msg").classList.add("hide");
+
+atualizarHUD();
+
+loop=setInterval(criar,fases[fase].spawn);
+
+iniciado=true;
+
+}
+
+document.body.onclick=function(){
+
+if(!iniciado){
+iniciar();
+}
+
+}
+
+function atualizarHUD(){
+
+hudPts.textContent=pontos;
+hudGoal.textContent=fases[fase].meta;
+hudFase.textContent=fase+1;
+
+}
+
+function criar(){
+
+const b=document.createElement("div");
+
+b.className="ball";
+
+if(fase==2){
+b.classList.add("shake");
+}
+
+const tam=40+Math.random()*35;
+
+b.style.width=tam+"px";
+b.style.height=tam+"px";
+
+b.style.left=Math.random()*(innerWidth-tam)+"px";
+b.style.top=Math.random()*(innerHeight-tam)+"px";
+
+b.textContent=fases[fase].emoji;
+
+b.onclick=function(e){
+
+e.stopPropagation();
+
+b.remove();
+
+pontos++;
+
+if(fase==2){
+
+if(Math.random()<0.05){
+
+document.body.style.background=
+`rgb(${20+Math.random()*20},${20+Math.random()*20},${20+Math.random()*20})`;
+
+}
+
+}
+
+atualizarHUD();
+
+if(pontos>=fases[fase].meta){
+
+proxima();
+
+}
+
+};
+
+document.body.appendChild(b);
+
+setTimeout(()=>{
+
+b.remove();
+
+},fases[fase].vida);
+
+}
+
+function proxima(){
+
+clearInterval(loop);
+
+document.querySelectorAll(".ball").forEach(e=>e.remove());
+
+fase++;
+
+pontos=0;
+
+if(fase>=3){
+
+fim();
+
+return;
+
+}
+
+document.getElementById("msg").classList.remove("hide");
+document.getElementById("msg").innerHTML="Fase "+(fase+1);
+
+setTimeout(()=>{
+
+document.getElementById("msg").classList.add("hide");
+
+atualizarHUD();
+
+loop=setInterval(criar,fases[fase].spawn);
+
+},2000);
+
+}
+
+function fim(){
+
+document.body.innerHTML=`
+<div style="
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+width:100vw;
+height:100vh;
+background:black;
+color:white;
+font-family:Arial;
+text-align:center;
+">
+<h1>Parabéns.</h1>
+<p>Você encontrou o fim.</p>
+<img src="imagem.png"
+style="margin-top:30px;max-width:90%;max-height:70%;">
+</div>
+`;
+
+}
+
+if(fase==2){
+
+document.body.classList.add("glitch");
+
+}
+
+</script>
+
+</body>
+</html>
