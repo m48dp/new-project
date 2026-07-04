@@ -5,272 +5,240 @@
 <title>Capture as Bolinhas</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-
 body{
+    margin:0;
     overflow:hidden;
-    background:#bfe8ff;
-    font-family:Arial,Helvetica,sans-serif;
-    user-select:none;
+    font-family:Arial,sans-serif;
+    background:#9fdcff;
+    transition:background 1s;
 }
 
 #hud{
     position:fixed;
     top:15px;
     left:15px;
-    color:#111;
     font-size:24px;
     font-weight:bold;
-    z-index:9999;
+    z-index:1000;
 }
 
-#msg{
-    position:fixed;
-    inset:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:50px;
-    background:#000a;
-    color:#fff;
-    transition:.5s;
-    z-index:9998;
-}
-
-.hide{
-    display:none!important;
-}
-
-.ball{
+.bola{
     position:absolute;
+    width:60px;
+    height:60px;
     border-radius:50%;
-    background:#fff;
-    border:2px solid #000;
+    background:white;
+    border:2px solid black;
     display:flex;
     justify-content:center;
     align-items:center;
     cursor:pointer;
-    font-size:30px;
+    font-size:34px;
 }
 
-.shake{
-    animation:shake .05s infinite;
+.bola img{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    pointer-events:none;
 }
 
-@keyframes shake{
-    0%{transform:translate(2px,0);}
-    25%{transform:translate(-2px,2px);}
+.treme{
+    animation:tremer .05s infinite;
+}
+
+@keyframes tremer{
+    0%{transform:translate(2px,1px);}
+    25%{transform:translate(-2px,-1px);}
     50%{transform:translate(2px,-2px);}
-    75%{transform:translate(-2px,-1px);}
-    100%{transform:translate(2px,1px);}
+    75%{transform:translate(-2px,2px);}
+    100%{transform:translate(1px,-1px);}
 }
 
-.glitch{
-    animation:bg 3s infinite;
-}
-
-@keyframes bg{
-    0%{filter:none;}
-    20%{filter:contrast(120%);}
-    21%{filter:invert(5%);}
-    22%{filter:none;}
-    60%{filter:brightness(.9);}
+#mensagem{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:50px;
+    z-index:999;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div id="hud">
-Fase <span id="fase">1</span><br>
-Pontos <span id="pts">0</span>/<span id="goal">10</span>
+Fase: <span id="fase">1</span><br>
+Pontos: <span id="pontos">0</span>/<span id="meta">10</span>
 </div>
 
-<div id="msg">Clique para começar</div>
-
-<audio id="buzz">
-<source src="">
-</audio>
+<div id="mensagem">
+Clique para começar
+</div>
 
 <script>
 
-const fases=[
-{
-meta:10,
-emoji:"😊",
-spawn:700,
-vida:1500
-},
-{
-meta:15,
-emoji:"😐",
-spawn:450,
-vida:1100
-},
-{
-meta:666,
-emoji:"🧑",
-spawn:120,
-vida:700
-}
-];
-
-let fase=0;
+let fase=1;
 let pontos=0;
-let loop;
-let iniciado=false;
-
-const hudPts=document.getElementById("pts");
-const hudGoal=document.getElementById("goal");
-const hudFase=document.getElementById("fase");
-
-function iniciar(){
-
-document.getElementById("msg").classList.add("hide");
-
-atualizarHUD();
-
-loop=setInterval(criar,fases[fase].spawn);
-
-iniciado=true;
-
-}
+let meta=10;
+let emoji="😊";
+let velocidade=700;
+let intervalo;
 
 document.body.onclick=function(){
 
-if(!iniciado){
-iniciar();
+    if(document.getElementById("mensagem")){
+        document.getElementById("mensagem").remove();
+        iniciar();
+        document.body.onclick=null;
+    }
+
 }
+
+function iniciar(){
+
+    atualizarHUD();
+
+    intervalo=setInterval(criarBola,velocidade);
 
 }
 
 function atualizarHUD(){
 
-hudPts.textContent=pontos;
-hudGoal.textContent=fases[fase].meta;
-hudFase.textContent=fase+1;
+    document.getElementById("fase").textContent=fase;
+    document.getElementById("pontos").textContent=pontos;
+    document.getElementById("meta").textContent=meta;
 
 }
 
-function criar(){
+function criarBola(){
 
-const b=document.createElement("div");
+    const bola=document.createElement("div");
+    bola.className="bola";
 
-b.className="ball";
+    const tamanho=50+Math.random()*20;
 
-if(fase==2){
-b.classList.add("shake");
-}
+    bola.style.width=tamanho+"px";
+    bola.style.height=tamanho+"px";
 
-const tam=40+Math.random()*35;
+    bola.style.left=Math.random()*(window.innerWidth-tamanho)+"px";
+    bola.style.top=Math.random()*(window.innerHeight-tamanho)+"px";
 
-b.style.width=tam+"px";
-b.style.height=tam+"px";
+    if(fase==3){
 
-b.style.left=Math.random()*(innerWidth-tam)+"px";
-b.style.top=Math.random()*(innerHeight-tam)+"px";
+        bola.classList.add("treme");
+        bola.innerHTML='<img src="emily.png">';
 
-b.textContent=fases[fase].emoji;
+    }else{
 
-b.onclick=function(e){
+        bola.textContent=emoji;
 
-e.stopPropagation();
+    }
 
-b.remove();
+    bola.onclick=function(e){
 
-pontos++;
+        e.stopPropagation();
 
-if(fase==2){
+        pontos++;
 
-if(Math.random()<0.05){
+        atualizarHUD();
 
-document.body.style.background=
-`rgb(${20+Math.random()*20},${20+Math.random()*20},${20+Math.random()*20})`;
+        bola.remove();
 
-}
+        if(fase==3){
 
-}
+            if(pontos%50==0){
 
-atualizarHUD();
+                document.body.style.background=
+                "rgb("+(20+Math.random()*20)+","+
+                (20+Math.random()*20)+","+
+                (20+Math.random()*20)+")";
 
-if(pontos>=fases[fase].meta){
+            }
 
-proxima();
+            if(pontos==111 || pontos==222 || pontos==333 || pontos==444 || pontos==555){
 
-}
+                alert("Continue.");
 
-};
+            }
 
-document.body.appendChild(b);
+        }
 
-setTimeout(()=>{
+        if(pontos>=meta){
 
-b.remove();
+            proximaFase();
 
-},fases[fase].vida);
+        }
 
-}
+    }
 
-function proxima(){
+    document.body.appendChild(bola);
 
-clearInterval(loop);
+    setTimeout(()=>{
 
-document.querySelectorAll(".ball").forEach(e=>e.remove());
+        bola.remove();
 
-fase++;
-
-pontos=0;
-
-if(fase>=3){
-
-fim();
-
-return;
+    },1500);
 
 }
 
-document.getElementById("msg").classList.remove("hide");
-document.getElementById("msg").innerHTML="Fase "+(fase+1);
+function proximaFase(){
 
-setTimeout(()=>{
+    clearInterval(intervalo);
 
-document.getElementById("msg").classList.add("hide");
+    document.querySelectorAll(".bola").forEach(b=>b.remove());
 
-atualizarHUD();
+    if(fase==1){
 
-loop=setInterval(criar,fases[fase].spawn);
+        fase=2;
+        pontos=0;
+        meta=15;
+        emoji="😐";
+        velocidade=450;
 
-},2000);
+        alert("Fase 2");
 
-}
+    }else if(fase==2){
 
-function fim(){
+        fase=3;
+        pontos=0;
+        meta=666;
+        velocidade=120;
 
-document.body.innerHTML=`
-<div style="
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-width:100vw;
-height:100vh;
-background:black;
-color:white;
-font-family:Arial;
-text-align:center;
-">
-<h1>Parabéns.</h1>
-<p>Você encontrou o fim.</p>
-<img src="imagem.png"
-style="margin-top:30px;max-width:90%;max-height:70%;">
-</div>
-`;
+        document.body.style.background="#222";
 
-}
+        alert("Fase 3");
 
-if(fase==2){
+    }else{
 
-document.body.classList.add("glitch");
+        document.body.innerHTML=`
+        <div style="
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        flex-direction:column;
+        width:100vw;
+        height:100vh;
+        background:black;
+        color:white;
+        font-size:40px;
+        ">
+            <h1>Fim.</h1>
+            <img src="emily.png" style="width:400px;">
+        </div>
+        `;
+
+        return;
+
+    }
+
+    atualizarHUD();
+
+    intervalo=setInterval(criarBola,velocidade);
 
 }
 
